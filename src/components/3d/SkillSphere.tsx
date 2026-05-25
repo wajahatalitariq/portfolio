@@ -177,7 +177,6 @@ export default function SkillSphere({ position, name }: { position: [number, num
                         color={hovered ? "#ffffff" : "#00e5ff"}
                         anchorX="center"
                         anchorY="middle"
-                        depthTest={false}
                     >
                         {name}
                     </Text>
