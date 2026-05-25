@@ -135,7 +135,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
             };
             animFrameRef.current = requestAnimationFrame(animate);
         } else {
-            setDrawProgress(0);
+            requestAnimationFrame(() => setDrawProgress(0));
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         }
         return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
@@ -186,7 +186,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
         }
     };
 
-    const activeLink = sorted.find((l) => l.id === activeId);
+
 
     return (
         <motion.section 
@@ -211,7 +211,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                 {/* SVG pulse lines */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox={`0 0 ${dims.w} ${dims.h}`}>
                     <defs>
-                        {sorted.map((link, i) => (
+                        {sorted.map((link) => (
                             <radialGradient key={`rg-${link.id}`} id={`rg-${link.id}`} cx="50%" cy="50%" r="50%">
                                 <stop offset="0%" stopColor={link.color} stopOpacity="0.8" />
                                 <stop offset="100%" stopColor={link.color} stopOpacity="0" />
@@ -401,7 +401,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                                                 </svg>
                                             </div>
                                             <p className="text-[#00ff88] font-mono font-bold tracking-widest uppercase text-sm">Signal Transmitted!</p>
-                                            <p className="text-zinc-500 font-mono text-xs">I'll get back to you soon.</p>
+                                            <p className="text-zinc-500 font-mono text-xs">I&apos;ll get back to you soon.</p>
                                         </motion.div>
                                     ) : (
                                         <motion.form

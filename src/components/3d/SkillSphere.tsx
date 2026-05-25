@@ -1,8 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import { Html, Sparkles } from "@react-three/drei";
+import { Sparkles, Text, Billboard } from "@react-three/drei";
+import { ThreeEvent, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+
+let sharedAudioCtx: AudioContext | null = null;
+
+function getSharedAudioContext() {
+    if (typeof window === "undefined") return null;
+    if (!sharedAudioCtx) {
+        const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (AudioContextClass) {
+            sharedAudioCtx = new AudioContextClass();
+        }
+    }
+    return sharedAudioCtx;
+}
 
 /**
  * SkillSphere Component
@@ -15,6 +30,18 @@ export default function SkillSphere({ position, name }: { position: [number, num
     const bodyRef = useRef<RapierRigidBody>(null);
     const [hovered, setHovered] = useState(false);
     const [sparkling, setSparkling] = useState(false);
+    const [showLabel, setShowLabel] = useState(false);
+
+    const labelScaleRef = useRef(0);
+    const labelGroupRef = useRef<THREE.Group>(null);
+
+    // Animates the holographic tag using high-performance WebGL scaling loop
+    useFrame((_, delta) => {
+        if (!labelGroupRef.current) return;
+        const targetScale = showLabel ? 1 : 0;
+        labelScaleRef.current = THREE.MathUtils.lerp(labelScaleRef.current, targetScale, delta * 10);
+        labelGroupRef.current.scale.setScalar(labelScaleRef.current);
+    });
 
     /**
      * playClickSound
@@ -22,41 +49,59 @@ export default function SkillSphere({ position, name }: { position: [number, num
      * This avoids needing to load external .mp3 files for small UI sounds.
      */
     const playClickSound = () => {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        try {
+            const ctx = getSharedAudioContext();
+            if (!ctx) return;
 
-        // Layer 1: punchy low thud
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.frequency.setValueAtTime(220, ctx.currentTime);
-        osc1.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
-        gain1.gain.setValueAtTime(0.6, ctx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-        osc1.start(ctx.currentTime);
-        osc1.stop(ctx.currentTime + 0.2);
+            if (ctx.state === "suspended") {
+                ctx.resume();
+            }
 
-        // Layer 2: high-pitched sci-fi ping
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = "sine";
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.frequency.setValueAtTime(1200, ctx.currentTime);
-        osc2.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.3);
-        gain2.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-        osc2.start(ctx.currentTime);
-        osc2.stop(ctx.currentTime + 0.35);
+            // Layer 1: punchy low thud
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.frequency.setValueAtTime(220, ctx.currentTime);
+            osc1.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.15);
+            gain1.gain.setValueAtTime(0.6, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+            osc1.start(ctx.currentTime);
+            osc1.stop(ctx.currentTime + 0.2);
+
+            // Layer 2: high-pitched sci-fi ping
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = "sine";
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.frequency.setValueAtTime(1200, ctx.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.3);
+            gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc2.start(ctx.currentTime);
+            osc2.stop(ctx.currentTime + 0.35);
+        } catch (soundError) {
+            console.warn("Failed to play procedural click sound:", soundError);
+        }
     };
 
-    const handlePointerDown = (e: any) => {
+    const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
         e.stopPropagation();
         document.body.style.cursor = "grabbing";
-        playClickSound();
+        
+        try {
+            playClickSound();
+        } catch (err) {
+            console.warn("Audio play blocked or failed:", err);
+        }
+
+        // Toggle technology name label visibility on click
+        setShowLabel(prev => !prev);
 
         // Launch the sphere up on click
         if (bodyRef.current) {
+            bodyRef.current.wakeUp(); // Force wake up in case body is sleeping
             bodyRef.current.applyImpulse(
                 { x: (Math.random() - 0.5) * 5, y: 8 + Math.random() * 5, z: (Math.random() - 0.5) * 5 }, true
             );
@@ -75,7 +120,7 @@ export default function SkillSphere({ position, name }: { position: [number, num
             <mesh
                 onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "grab"; }}
                 onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
-                onPointerDown={handlePointerDown}
+                onClick={handlePointerDown}
                 onPointerUp={(e) => { e.stopPropagation(); document.body.style.cursor = "grab"; }}
                 castShadow
             >
@@ -91,24 +136,53 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 />
             </mesh>
 
-            {/* Name label — always visible, bigger font */}
-            <Html
-                center
-                distanceFactor={6}
-                zIndexRange={[100, 0]}
-                style={{ pointerEvents: "none" }}
-            >
-                <div className={`
-                    text-[11px] font-bold font-mono px-2 py-0.5 rounded whitespace-nowrap select-none
-                    transition-all duration-200
-                    ${hovered
-                        ? "bg-[#00e5ff]/30 text-white border border-[#00e5ff] shadow-[0_0_12px_rgba(0,229,255,0.9)]"
-                        : "bg-black/70 text-[#00e5ff] border border-[#00e5ff]/30"
-                    }
-                `}>
-                    {name}
-                </div>
-            </Html>
+            {/* Holographic Name Tag — rendered in 3D WebGL for perfect z-index, coordinate sync, and zero DOM overlap issues */}
+            <Billboard position={[0, 1.3, 0]}>
+                <group ref={labelGroupRef} scale={0}>
+                    {/* Badge Background */}
+                    <mesh>
+                        <planeGeometry args={[1.8, 0.55]} />
+                        <meshBasicMaterial 
+                            color={hovered ? "#00ffff" : "#000813"} 
+                            opacity={hovered ? 0.35 : 0.85} 
+                            transparent 
+                            depthTest={false}
+                        />
+                    </mesh>
+
+                    {/* Badge Border (clean outer rectangle outline) */}
+                    <lineLoop>
+                        <bufferGeometry>
+                            <bufferAttribute
+                                attach="attributes-position"
+                                args={[new Float32Array([
+                                    -0.92, -0.295, 0,
+                                    -0.92,  0.295, 0,
+                                     0.92,  0.295, 0,
+                                     0.92, -0.295, 0
+                                ]), 3]}
+                            />
+                        </bufferGeometry>
+                        <lineBasicMaterial 
+                            color={hovered ? "#ffffff" : "#00e5ff"} 
+                            opacity={hovered ? 0.9 : 0.35} 
+                            transparent 
+                            depthTest={false}
+                        />
+                    </lineLoop>
+
+                    {/* Text Label */}
+                    <Text
+                        fontSize={0.2}
+                        color={hovered ? "#ffffff" : "#00e5ff"}
+                        anchorX="center"
+                        anchorY="middle"
+                        depthTest={false}
+                    >
+                        {name}
+                    </Text>
+                </group>
+            </Billboard>
 
             {/* Sparkle burst on click — stays centered on the sphere */}
             {sparkling && (

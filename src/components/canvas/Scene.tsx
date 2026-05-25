@@ -28,8 +28,9 @@ function ScrollHandler() {
     const scroll = useR3FScroll();
     
     useEffect(() => {
-        const handleScrollRequest = (e: any) => {
-            const { offsetKey, isMobile } = e.detail;
+        const handleScrollRequest = (e: Event) => {
+            const customEvent = e as CustomEvent<{ offsetKey: string; isMobile: boolean }>;
+            const { offsetKey, isMobile } = customEvent.detail;
             const offsets = isMobile ? OFFSETS.mobile : OFFSETS.desktop;
             const vh = offsets[offsetKey as keyof typeof offsets] as number;
             
@@ -42,8 +43,8 @@ function ScrollHandler() {
             }
         };
 
-        window.addEventListener("portfolio-scroll", handleScrollRequest);
-        return () => window.removeEventListener("portfolio-scroll", handleScrollRequest);
+        window.addEventListener("portfolio-scroll", handleScrollRequest as EventListener);
+        return () => window.removeEventListener("portfolio-scroll", handleScrollRequest as EventListener);
     }, [scroll]);
 
     return null;
@@ -58,6 +59,21 @@ function ScrollHandler() {
  */
 export default function Scene({ skills, projects, experiences, hobbies, resume, hero, certifications, contactLinks }: SceneProps) {
     const [isMobile, setIsMobile] = useState(false);
+
+    // Pre-generate random positions for skill spheres to maintain purity in React 19
+    const [skillPositions, setSkillPositions] = useState<[number, number, number][]>([]);
+
+    useEffect(() => {
+        const positions = skills.map(() => [
+            (Math.random() - 0.5) * 10,
+            5 + Math.random() * 8,
+            (Math.random() - 0.5) * 4
+        ] as [number, number, number]);
+        
+        requestAnimationFrame(() => {
+            setSkillPositions(positions);
+        });
+    }, [skills]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -123,10 +139,10 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
                                 <mesh><boxGeometry args={[60, 40, 1]} /><meshStandardMaterial visible={false} /></mesh>
                             </RigidBody>
 
-                            {skills.map((skill, index) => (
+                            {skillPositions.length === skills.length && skills.map((skill, index) => (
                                 <SkillSphere
                                     key={index}
-                                    position={[(Math.random() - 0.5) * 10, 5 + Math.random() * 8, (Math.random() - 0.5) * 4]}
+                                    position={skillPositions[index]}
                                     name={skill.name}
                                 />
                             ))}

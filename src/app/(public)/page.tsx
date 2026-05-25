@@ -1,4 +1,4 @@
-import Scene from '@/components/canvas/Scene';
+import ClientScene from '@/components/canvas/ClientScene';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -22,7 +22,7 @@ export default async function Home() {
 
   return (
     <main className="w-screen h-screen">
-      <Scene
+      <ClientScene
         skills={skills}
         projects={projects}
         experiences={experiences}

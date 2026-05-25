@@ -182,7 +182,7 @@ export default function CVDownloadSection({ resume }: { resume: Resume | null })
                                 role="button"
                                 tabIndex={0}
                                 aria-label={btn.label}
-                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { btn.href ? undefined : handleCopyLink(); } }}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (!btn.href) handleCopyLink(); } }}
                                 onClick={btn.href ? undefined : handleCopyLink}
                             >
                                 {/* Icon */}

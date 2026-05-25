@@ -13,7 +13,6 @@ export default function AudioPlayer() {
     // We use a Ref to directly interact with the <audio> element.
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [volume, setVolume] = useState(0);
 
     useEffect(() => {
         // Initial fade in
@@ -22,7 +21,6 @@ export default function AudioPlayer() {
             const fadeIn = setInterval(() => {
                 if (audioRef.current && audioRef.current.volume < 0.4) {
                     audioRef.current.volume += 0.02;
-                    setVolume(audioRef.current.volume);
                 } else {
                     clearInterval(fadeIn);
                 }

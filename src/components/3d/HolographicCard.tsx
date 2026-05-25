@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Html } from "@react-three/drei";
 
 /**
  * HolographicCard Component
@@ -11,7 +10,6 @@ import { Html } from "@react-three/drei";
  * the project description when clicked.
  */
 export default function HolographicCard({ title, description }: { title: string, description: string }) {
-    const [hovered, setHover] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     // handleClick toggles the card and triggers the browser's SpeechSynthesis API.
@@ -38,8 +36,8 @@ export default function HolographicCard({ title, description }: { title: string,
                     : "bg-[#030d1a]/85 border-[#1a3a5c] hover:border-[#00e5ff]/60 h-[180px]"
                 }`}
 
-            onMouseEnter={() => { setHover(true); document.body.style.cursor = "pointer"; }}
-            onMouseLeave={() => { setHover(false); document.body.style.cursor = "auto"; }}
+            onMouseEnter={() => { document.body.style.cursor = "pointer"; }}
+            onMouseLeave={() => { document.body.style.cursor = "auto"; }}
             onClick={handleClick}
         >
             <div className="flex items-center gap-2 mb-3">

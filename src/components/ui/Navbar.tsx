@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { OFFSETS } from "@/lib/constants";
 
 /**
  * Navigation Links Configuration
@@ -27,7 +26,7 @@ export default function Navbar() {
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isMobile, setIsMobile] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
+
 
     const { scrollY } = useScroll();
     const opacity = useTransform(scrollY, [0, 50], [0.8, 1]);
@@ -38,9 +37,6 @@ export default function Navbar() {
             setMousePos({ x: e.clientX, y: e.clientY });
         };
         const handleResize = () => setIsMobile(window.innerWidth < 768);
-        const unsubscribe = scrollY.on("change", (latest) => {
-            setIsScrolled(latest > 50);
-        });
         
         handleResize();
         window.addEventListener("mousemove", handleMouseMove);
@@ -49,7 +45,6 @@ export default function Navbar() {
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("resize", handleResize);
-            unsubscribe();
         };
     }, [scrollY]);
 
