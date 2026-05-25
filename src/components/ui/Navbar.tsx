@@ -26,6 +26,7 @@ export default function Navbar() {
     const [hoveredLink, setHoveredLink] = useState<string | null>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isMobile, setIsMobile] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
 
     const { scrollY } = useScroll();
@@ -36,7 +37,11 @@ export default function Navbar() {
         const handleMouseMove = (e: MouseEvent) => {
             setMousePos({ x: e.clientX, y: e.clientY });
         };
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        const handleResize = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (!mobile) setIsOpen(false); // Close mobile menu if resized to desktop
+        };
         
         handleResize();
         window.addEventListener("mousemove", handleMouseMove);
@@ -86,9 +91,10 @@ export default function Navbar() {
                 )}
             </AnimatePresence>
 
+            {/* Desktop Navbar - Hidden on Mobile */}
             <motion.nav
                 style={{ opacity, scale }}
-                className="fixed top-6 left-1/2 -translate-x-1/2 z-[50] flex items-center justify-center pointer-events-auto"
+                className="hidden md:flex fixed top-6 left-1/2 -translate-x-1/2 z-[50] items-center justify-center pointer-events-auto"
             >
                 <div className="relative px-6 py-3 rounded-full bg-[#0a192f]/40 border border-[#00e5ff]/20 backdrop-blur-xl shadow-[0_0_30px_rgba(0,229,255,0.1)] flex items-center gap-6 md:gap-8">
                     {NAV_LINKS.map((link) => (
@@ -130,6 +136,89 @@ export default function Navbar() {
 
                     <div className="hidden md:block w-1 h-1 bg-[#00e5ff] rounded-full animate-pulse shadow-[0_0_5px_#00e5ff]" />
                 </div>
+            </motion.nav>
+
+            {/* Mobile Navbar - Flex on Mobile, Hidden on Desktop */}
+            <motion.nav
+                style={{ opacity }}
+                className="flex md:hidden fixed top-4 left-4 right-4 z-[50] flex-col pointer-events-auto"
+            >
+                {/* Header Pill */}
+                <div className="relative w-full px-5 py-3 rounded-full bg-[#0a192f]/60 border border-[#00e5ff]/20 backdrop-blur-xl shadow-[0_0_30px_rgba(0,229,255,0.15)] flex items-center justify-between">
+                    {/* Brand / Logo */}
+                    <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-[#00e5ff] rounded-full animate-pulse shadow-[0_0_5px_#00e5ff]" />
+                        <span className="text-zinc-200 font-mono text-xs tracking-[0.25em] font-bold">
+                            ABZ // <span className="text-[#00e5ff]">HUD</span>
+                        </span>
+                    </div>
+
+                    {/* Toggle Button */}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="relative w-8 h-8 flex flex-col items-center justify-center gap-1 focus:outline-none cursor-pointer"
+                        aria-label="Toggle Menu"
+                    >
+                        {/* Custom Animated Hamburger / Close Icon */}
+                        <motion.span
+                            animate={isOpen ? { rotate: 45, y: 4.5 } : { rotate: 0, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="w-5 h-[2px] bg-[#00e5ff] rounded-full shadow-[0_0_4px_rgba(0,229,255,0.5)]"
+                        />
+                        <motion.span
+                            animate={isOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-5 h-[2px] bg-[#00e5ff] rounded-full shadow-[0_0_4px_rgba(0,229,255,0.5)]"
+                        />
+                        <motion.span
+                            animate={isOpen ? { rotate: -45, y: -4.5 } : { rotate: 0, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="w-5 h-[2px] bg-[#00e5ff] rounded-full shadow-[0_0_4px_rgba(0,229,255,0.5)]"
+                        />
+                    </button>
+                </div>
+
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, y: -10 }}
+                            animate={{ opacity: 1, height: "auto", y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: -10 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden mt-2 w-full rounded-2xl bg-[#0a192f]/70 border border-[#00e5ff]/15 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,229,255,0.1)]"
+                        >
+                            <div className="p-5 flex flex-col gap-4">
+                                {NAV_LINKS.map((link, idx) => (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ delay: idx * 0.05, duration: 0.2 }}
+                                        key={link.label}
+                                        onClick={() => {
+                                            scrollToSection(link.offset);
+                                            setIsOpen(false);
+                                        }}
+                                        className="relative flex items-center justify-between p-2 rounded-lg border border-transparent hover:border-[#00e5ff]/10 hover:bg-[#00e5ff]/5 group cursor-pointer transition-all duration-300"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] text-[#b300ff] font-mono opacity-80 group-hover:text-[#00e5ff] transition-colors">
+                                                {link.id}
+                                            </span>
+                                            <span className="text-zinc-300 font-mono text-xs tracking-[0.15em] uppercase group-hover:text-[#00e5ff] transition-colors">
+                                                {link.label}
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Glowing dot for active hover */}
+                                        <div className="w-1.5 h-1.5 bg-[#00e5ff] rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_6px_#00e5ff] scale-0 group-hover:scale-100 duration-300" />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.nav>
         </>
     );
