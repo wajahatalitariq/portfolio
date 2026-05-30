@@ -414,7 +414,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                                             <p className="text-[10px] font-mono text-zinc-600 tracking-widest uppercase border-b border-white/5 pb-3">
                                                 <span className="text-[#00e5ff]">new_connection</span> ·  Initialize
                                             </p>
-                                            <div className="flex gap-3">
+                                            <div className="flex flex-col sm:flex-row gap-3">
                                                 <input
                                                     required
                                                     name="name"
