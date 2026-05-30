@@ -15,14 +15,14 @@ export const OFFSETS = {
     hero: 0,
     projects: 120,
     grid: 140,
-    tech: 260,
-    exp: 400,
-    skill: 560, // Starting point for Skill Network
-    cert: 720,
-    hobbies: 880,
-    cv: 1020,
-    contact: 1160,
-    pages: 13.0 // Total virtual pages in the scroll container
+    tech: 420,
+    exp: 600,
+    skill: 900, // Starting point for Skill Network
+    cert: 1100,
+    hobbies: 1250,
+    cv: 1400,
+    contact: 1550,
+    pages: 17.2 // Total virtual pages in the scroll container
   },
   // Desktop layout is more compact.
   desktop: {
