@@ -29,13 +29,13 @@ export const OFFSETS = {
     hero: 0,
     projects: 120,
     grid: 140,
-    tech: 220,
-    exp: 340,
-    skill: 460,
-    cert: 580,
-    hobbies: 700,
-    cv: 810,
-    contact: 920,
-    pages: 10.3
+    tech: 300,
+    exp: 480,
+    skill: 620,
+    cert: 740,
+    hobbies: 860,
+    cv: 970,
+    contact: 1080,
+    pages: 12.2
   }
 };
