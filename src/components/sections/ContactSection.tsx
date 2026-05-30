@@ -119,6 +119,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
     const [copied, setCopied] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [sent, setSent] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({ name: "", email: "", message: "" });
     const [drawProgress, setDrawProgress] = useState(0);
     const animFrameRef = useRef<number | null>(null);
@@ -171,8 +172,11 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (submitting) return;
+        setSubmitting(true);
         const formData = new FormData(e.target as HTMLFormElement);
         const res = await submitMessage(formData);
+        setSubmitting(false);
 
         if (res.success) {
             setSent(true);
@@ -206,8 +210,8 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                 </h2>
             </div>
 
-            {/* Node Network SVG Canvas */}
-            <div ref={containerRef} className="relative w-full max-w-3xl" style={{ height: `${dims.h}px` }}>
+            {/* Desktop Node Network SVG Canvas - Hidden on Mobile */}
+            <div ref={containerRef} className="hidden md:block relative w-full max-w-3xl" style={{ height: `${dims.h}px` }}>
                 {/* SVG pulse lines */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox={`0 0 ${dims.w} ${dims.h}`}>
                     <defs>
@@ -328,6 +332,40 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                 })}
             </div>
 
+            {/* Mobile Contact Links Grid - Hidden on Desktop */}
+            <div className="flex md:hidden flex-wrap justify-center gap-4 w-full max-w-2xl px-4">
+                {sorted.map((link, i) => {
+                    const icon = ICONS[link.icon] ?? ICONS.default;
+                    return (
+                        <motion.button
+                            key={link.id}
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: i * 0.05 }}
+                            onClick={() => handleNodeClick(link)}
+                            className="flex flex-col items-center justify-center gap-3 p-4 rounded-2xl w-[130px] sm:w-[150px] bg-[#0a192f]/50 border border-white/5 hover:border-[#00e5ff]/30 hover:bg-[#00e5ff]/5 transition-all duration-300 group cursor-pointer focus:outline-none"
+                            style={{
+                                boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+                            }}
+                        >
+                            <div 
+                                className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border border-white/10 group-hover:border-[#00e5ff] group-hover:scale-105"
+                                style={{
+                                    background: "rgba(2, 12, 24, 0.6)",
+                                    boxShadow: `0 0 10px ${link.color}22`,
+                                }}
+                            >
+                                {icon(link.color)}
+                            </div>
+                            <span className="font-mono text-[10px] tracking-widest uppercase text-zinc-400 group-hover:text-white transition-colors">
+                                {link.label}
+                            </span>
+                        </motion.button>
+                    );
+                })}
+            </div>
+
             {/* Active link hint */}
             <AnimatePresence>
                 {copied && (
@@ -417,34 +455,38 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                                             <div className="flex flex-col sm:flex-row gap-3">
                                                 <input
                                                     required
+                                                    disabled={submitting}
                                                     name="name"
                                                     placeholder="Your name"
                                                     value={formData.name}
                                                     onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
-                                                    className="flex-1 bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 outline-none transition-colors font-mono"
+                                                    className="flex-1 bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 focus:shadow-[0_0_15px_rgba(0,229,255,0.15)] outline-none transition-all font-mono disabled:opacity-50"
                                                 />
                                                 <input
                                                     required
+                                                    disabled={submitting}
                                                     name="email"
                                                     type="email"
                                                     placeholder="Email"
                                                     value={formData.email}
                                                     onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
-                                                    className="flex-1 bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 outline-none transition-colors font-mono"
+                                                    className="flex-1 bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 focus:shadow-[0_0_15px_rgba(0,229,255,0.15)] outline-none transition-all font-mono disabled:opacity-50"
                                                 />
                                             </div>
                                             <textarea
                                                 required
+                                                disabled={submitting}
                                                 name="message"
                                                 rows={4}
                                                 placeholder="Your message..."
                                                 value={formData.message}
                                                 onChange={(e) => setFormData(f => ({ ...f, message: e.target.value }))}
-                                                className="bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 outline-none transition-colors font-mono resize-none"
-                            />
+                                                className="bg-[#020c18] border border-white/8 rounded-xl p-3 text-sm text-white placeholder-zinc-700 focus:border-[#00e5ff]/40 focus:shadow-[0_0_15px_rgba(0,229,255,0.15)] outline-none transition-all font-mono resize-none disabled:opacity-50"
+                                            />
                                             <button
                                                 type="submit"
-                                                className="w-full py-3 rounded-xl font-mono font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:scale-[1.02]"
+                                                disabled={submitting}
+                                                className="w-full py-3 rounded-xl font-mono font-bold text-xs tracking-widest uppercase transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
                                                 style={{
                                                     background: "linear-gradient(120deg, rgba(0,229,255,0.2), rgba(179,0,255,0.15))",
                                                     border: "1px solid rgba(0,229,255,0.35)",
@@ -452,7 +494,14 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                                                     boxShadow: "0 0 20px rgba(0,229,255,0.15)",
                                                 }}
                                             >
-                                                Transmit Signal →
+                                                {submitting ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <span className="w-1.5 h-1.5 bg-[#00e5ff] rounded-full animate-ping" />
+                                                        Transmitting Signal...
+                                                    </span>
+                                                ) : (
+                                                    "Transmit Signal →"
+                                                )}
                                             </button>
                                         </motion.form>
                                     )}
