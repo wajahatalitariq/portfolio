@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import type { Hobby } from "@prisma/client";
@@ -110,6 +110,13 @@ const ICONS: Record<string, (isHovered: boolean) => React.ReactNode> = {
 
 export default function HobbiesSection({ hobbies }: { hobbies: Hobby[] }) {
     const [hovered, setHovered] = useState<string | null>(null);
+    const [isTouch, setIsTouch] = useState(false);
+
+    useEffect(() => {
+        requestAnimationFrame(() => {
+            setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        });
+    }, []);
 
     return (
         <div className="w-full flex flex-col items-center px-4">
@@ -136,8 +143,13 @@ export default function HobbiesSection({ hobbies }: { hobbies: Hobby[] }) {
                             transition={{ duration: 0.8, type: "spring", bounce: 0.4, delay: index * 0.05 }}
                             className="relative flex flex-col items-center cursor-pointer select-none"
                             style={{ width: "130px" }}
-                            onMouseEnter={() => setHovered(hobby.id)}
-                            onMouseLeave={() => setHovered(null)}
+                            onMouseEnter={() => !isTouch && setHovered(hobby.id)}
+                            onMouseLeave={() => !isTouch && setHovered(null)}
+                            onClick={() => {
+                                if (isTouch) {
+                                    setHovered(hovered === hobby.id ? null : hobby.id);
+                                }
+                            }}
                         >
                             {/* Icon Container */}
                             <div
