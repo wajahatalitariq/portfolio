@@ -143,14 +143,23 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
     }, [formOpen]);
 
     useEffect(() => {
-        const measure = () => {
-            if (containerRef.current) {
-                setDims({ w: containerRef.current.offsetWidth, h: 180 });
+        if (!containerRef.current) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                // Use contentRect width or fallback to offsetWidth if contentRect is empty
+                const width = entry.contentRect.width || (containerRef.current ? containerRef.current.offsetWidth : 0);
+                if (width > 0) {
+                    setDims({ w: width, h: 180 });
+                }
             }
+        });
+
+        observer.observe(containerRef.current);
+
+        return () => {
+            observer.disconnect();
         };
-        measure();
-        window.addEventListener("resize", measure);
-        return () => window.removeEventListener("resize", measure);
     }, []);
 
     const positions = getNodePositions(sorted.length, dims.w, dims.h);
