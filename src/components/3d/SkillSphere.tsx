@@ -122,8 +122,9 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
                 onClick={handlePointerDown}
                 onPointerUp={(e) => { e.stopPropagation(); document.body.style.cursor = "grab"; }}
+                castShadow
             >
-                <sphereGeometry args={[0.8, 24, 24]} />
+                <sphereGeometry args={[0.8, 32, 32]} />
                 <meshStandardMaterial
                     color={hovered ? "#00ffff" : "#0a192f"}
                     emissive={sparkling ? "#ff00ff" : hovered ? "#0088ff" : "#0055ff"}
