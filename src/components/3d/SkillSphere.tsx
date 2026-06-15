@@ -2,9 +2,8 @@
 
 import { useRef, useState } from "react";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import { Sparkles, Text, Billboard } from "@react-three/drei";
-import { ThreeEvent, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import { Html, Sparkles } from "@react-three/drei";
+import { ThreeEvent } from "@react-three/fiber";
 
 let sharedAudioCtx: AudioContext | null = null;
 
@@ -24,24 +23,12 @@ function getSharedAudioContext() {
  * 
  * An interactive 3D orb that represents a technical skill.
  * Uses 'react-three-rapier' for physics (collisions and impulses)
- * and generates dynamic procedurale audio on click.
+ * and generates dynamic procedural audio on click.
  */
 export default function SkillSphere({ position, name }: { position: [number, number, number], name: string }) {
     const bodyRef = useRef<RapierRigidBody>(null);
     const [hovered, setHovered] = useState(false);
     const [sparkling, setSparkling] = useState(false);
-    const [showLabel, setShowLabel] = useState(false);
-
-    const labelScaleRef = useRef(0);
-    const labelGroupRef = useRef<THREE.Group>(null);
-
-    // Animates the holographic tag using high-performance WebGL scaling loop
-    useFrame((_, delta) => {
-        if (!labelGroupRef.current) return;
-        const targetScale = showLabel ? 1 : 0;
-        labelScaleRef.current = THREE.MathUtils.lerp(labelScaleRef.current, targetScale, delta * 10);
-        labelGroupRef.current.scale.setScalar(labelScaleRef.current);
-    });
 
     /**
      * playClickSound
@@ -96,9 +83,6 @@ export default function SkillSphere({ position, name }: { position: [number, num
             console.warn("Audio play blocked or failed:", err);
         }
 
-        // Toggle technology name label visibility on click
-        setShowLabel(prev => !prev);
-
         // Launch the sphere up on click
         if (bodyRef.current) {
             bodyRef.current.wakeUp(); // Force wake up in case body is sleeping
@@ -136,52 +120,24 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 />
             </mesh>
 
-            {/* Holographic Name Tag — rendered in 3D WebGL for perfect z-index, coordinate sync, and zero DOM overlap issues */}
-            <Billboard position={[0, 1.3, 0]}>
-                <group ref={labelGroupRef} scale={0}>
-                    {/* Badge Background */}
-                    <mesh>
-                        <planeGeometry args={[1.8, 0.55]} />
-                        <meshBasicMaterial 
-                            color={hovered ? "#00ffff" : "#000813"} 
-                            opacity={hovered ? 0.35 : 0.85} 
-                            transparent 
-                            depthTest={false}
-                        />
-                    </mesh>
-
-                    {/* Badge Border (clean outer rectangle outline) */}
-                    <lineLoop>
-                        <bufferGeometry>
-                            <bufferAttribute
-                                attach="attributes-position"
-                                args={[new Float32Array([
-                                    -0.92, -0.295, 0,
-                                    -0.92,  0.295, 0,
-                                     0.92,  0.295, 0,
-                                     0.92, -0.295, 0
-                                ]), 3]}
-                            />
-                        </bufferGeometry>
-                        <lineBasicMaterial 
-                            color={hovered ? "#ffffff" : "#00e5ff"} 
-                            opacity={hovered ? 0.9 : 0.35} 
-                            transparent 
-                            depthTest={false}
-                        />
-                    </lineLoop>
-
-                    {/* Text Label */}
-                    <Text
-                        fontSize={0.2}
-                        color={hovered ? "#ffffff" : "#00e5ff"}
-                        anchorX="center"
-                        anchorY="middle"
-                    >
-                        {name}
-                    </Text>
-                </group>
-            </Billboard>
+            {/* Name label — always visible, lightweight DOM overlay */}
+            <Html
+                center
+                distanceFactor={6}
+                zIndexRange={[100, 0]}
+                style={{ pointerEvents: "none" }}
+            >
+                <div className={`
+                    text-[11px] font-bold font-mono px-2 py-0.5 rounded whitespace-nowrap select-none
+                    transition-all duration-200
+                    ${hovered
+                        ? "bg-[#00e5ff]/30 text-white border border-[#00e5ff] shadow-[0_0_12px_rgba(0,229,255,0.9)]"
+                        : "bg-black/70 text-[#00e5ff] border border-[#00e5ff]/30"
+                    }
+                `}>
+                    {name}
+                </div>
+            </Html>
 
             {/* Sparkle burst on click — stays centered on the sphere */}
             {sparkling && (

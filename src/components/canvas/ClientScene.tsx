@@ -13,12 +13,15 @@ import { AnimatePresence, motion } from "framer-motion";
  * Uses Drei's useProgress to track the loading state of textures, fonts, 
  * models, and the environment map. Keeps the CyberLoader visible until 
  * everything is fully ready, then fades it out smoothly.
+ * 
+ * Once loading completes and the exit animation finishes, the entire 
+ * overlay unmounts to free up the useProgress subscription.
  */
-function LoaderOverlay() {
+function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
     const { active, progress } = useProgress();
 
     return (
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={onComplete}>
             {active && (
                 <motion.div 
                     key="loader"
@@ -46,6 +49,7 @@ function LoaderOverlay() {
  */
 export default function ClientScene(props: SceneProps) {
     const [mounted, setMounted] = useState(false);
+    const [loadingDone, setLoadingDone] = useState(false);
 
     useEffect(() => {
         requestAnimationFrame(() => {
@@ -56,7 +60,7 @@ export default function ClientScene(props: SceneProps) {
     return (
         <>
             {mounted && <Scene {...props} />}
-            <LoaderOverlay />
+            {!loadingDone && <LoaderOverlay onComplete={() => setLoadingDone(true)} />}
             {!mounted && (
                 <div className="fixed inset-0 z-[9999]">
                      <CyberLoader />
@@ -65,3 +69,4 @@ export default function ClientScene(props: SceneProps) {
         </>
     );
 }
+
