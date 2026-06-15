@@ -3,6 +3,36 @@
 import { useState, useEffect } from "react";
 import Scene from "./Scene";
 import type { SceneProps } from "@/lib/types";
+import { useProgress } from "@react-three/drei";
+import CyberLoader from "@/components/ui/CyberLoader";
+import { AnimatePresence, motion } from "framer-motion";
+
+/**
+ * Three.js Asset Loader Overlay
+ * 
+ * Uses Drei's useProgress to track the loading state of textures, fonts, 
+ * models, and the environment map. Keeps the CyberLoader visible until 
+ * everything is fully ready, then fades it out smoothly.
+ */
+function LoaderOverlay() {
+    const { active, progress } = useProgress();
+
+    return (
+        <AnimatePresence>
+            {active && (
+                <motion.div 
+                    key="loader"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }} 
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="fixed inset-0 z-[9999]"
+                >
+                    <CyberLoader progressValue={progress} />
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
 
 /**
  * ClientScene Component
@@ -23,10 +53,15 @@ export default function ClientScene(props: SceneProps) {
         });
     }, []);
 
-    if (!mounted) {
-        // Render a dark matching background during SSR/Hydration
-        return <div className="w-screen h-screen bg-[#050508]" />;
-    }
-
-    return <Scene {...props} />;
+    return (
+        <>
+            {mounted && <Scene {...props} />}
+            <LoaderOverlay />
+            {!mounted && (
+                <div className="fixed inset-0 z-[9999]">
+                     <CyberLoader />
+                </div>
+            )}
+        </>
+    );
 }
