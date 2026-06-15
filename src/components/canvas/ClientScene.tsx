@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Scene from "./Scene";
+import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import type { SceneProps } from "@/lib/types";
 import { useProgress } from "@react-three/drei";
 import CyberLoader from "@/components/ui/CyberLoader";
 import { AnimatePresence, motion } from "framer-motion";
+
+// Dynamically import the main 3D Scene with ssr: false so heavy canvas code doesn't load on SSR
+const Scene = dynamic(() => import("./Scene"), {
+    ssr: false,
+    loading: () => <div className="fixed inset-0 z-[9999]"><CyberLoader /></div>
+});
 
 /**
  * Three.js Asset Loader Overlay
@@ -19,6 +25,29 @@ import { AnimatePresence, motion } from "framer-motion";
  */
 function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
     const { active, progress } = useProgress();
+    const hasBeenActiveRef = useRef(false);
+
+    useEffect(() => {
+        if (active) {
+            hasBeenActiveRef.current = true;
+        }
+    }, [active]);
+
+    useEffect(() => {
+        if (!active && hasBeenActiveRef.current) {
+            onComplete();
+        }
+    }, [active, onComplete]);
+
+    // Fallback: If 3 seconds pass and active is false, complete the loader
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (!active) {
+                onComplete();
+            }
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [active, onComplete]);
 
     return (
         <AnimatePresence onExitComplete={onComplete}>
@@ -41,32 +70,21 @@ function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
  * ClientScene Component
  * 
  * A client-only wrapper around the main 3D Scene.
- * Next.js SSR tries to pre-render the 3D Canvas on the server, which leads to 
- * WebGL errors, hydration mismatches, and double createRoot() crashes.
- * 
- * This wrapper guarantees the Canvas is only initialized on the client side 
- * after mount, preventing hydration errors and bypassing compiler bugs.
+ * Dynamically imports the heavy Scene component to split bundles.
  */
 export default function ClientScene(props: SceneProps) {
-    const [mounted, setMounted] = useState(false);
     const [loadingDone, setLoadingDone] = useState(false);
 
     useEffect(() => {
-        requestAnimationFrame(() => {
-            setMounted(true);
-        });
-    }, []);
+        if (loadingDone) {
+            window.dispatchEvent(new CustomEvent("portfolio-loaded"));
+        }
+    }, [loadingDone]);
 
     return (
         <>
-            {mounted && <Scene {...props} />}
+            <Scene {...props} />
             {!loadingDone && <LoaderOverlay onComplete={() => setLoadingDone(true)} />}
-            {!mounted && (
-                <div className="fixed inset-0 z-[9999]">
-                     <CyberLoader />
-                </div>
-            )}
         </>
     );
 }
-

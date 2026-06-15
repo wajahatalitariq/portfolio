@@ -37,9 +37,11 @@
   box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
 }
 
-/* Custom Cursor Base */
-* {
-  cursor: none !important;
+/* Custom Cursor Base - Only apply on non-touch devices */
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
 }
 
 body {

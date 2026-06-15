@@ -85,7 +85,7 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
     const offsets = isMobile ? OFFSETS.mobile : OFFSETS.desktop;
 
     return (
-        <Canvas camera={{ position: [0, 0, 6], fov: 50 }} dpr={[1, 2]}>
+        <Canvas camera={{ position: [0, 0, 6], fov: 50 }} dpr={isMobile ? 1 : [1, 2]}>
             <color attach="background" args={["#050508"]} />
             <ambientLight intensity={0.5} />
             <directionalLight position={[10, 10, 5]} intensity={2} color="#00e5ff" />
@@ -93,7 +93,7 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
  
             <Environment preset="city" />
  
-            <Sparkles count={500} scale={40} size={4} speed={0.4} opacity={0.3} color="#00e5ff" position={[0, -15, -2]} />
+            <Sparkles count={isMobile ? 150 : 500} scale={40} size={4} speed={0.4} opacity={0.3} color="#00e5ff" position={[0, -15, -2]} />
  
             <ScrollControls pages={offsets.pages} damping={0.2}>
                 <ScrollHandler />

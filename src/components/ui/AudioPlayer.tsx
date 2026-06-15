@@ -73,8 +73,8 @@ export default function AudioPlayer() {
                 className={`
                     relative w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-500 cursor-pointer
                     ${isPlaying 
-                        ? "bg-[#00e5ff]/10 border-[#00e5ff] shadow-[0_0_20px_rgba(0,229,255,0.4)]" 
-                        : "bg-black/40 border-white/10 hover:border-[#00e5ff]/50"
+                        ? "bg-[#00e5ff]/20 md:bg-[#00e5ff]/10 border-[#00e5ff] shadow-[0_0_20px_rgba(0,229,255,0.4)]" 
+                        : "bg-black/90 md:bg-black/40 border-white/10 hover:border-[#00e5ff]/50"
                     }
                 `}
             >

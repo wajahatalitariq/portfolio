@@ -22,7 +22,16 @@ export default function CustomCursor() {
     const ringX = useSpring(mouseX, springConfig);
     const ringY = useSpring(mouseY, springConfig);
 
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+
     useEffect(() => {
+        // Detect if the device has a touch screen
+        const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsTouchDevice(touch);
+        
+        if (touch) return; // Don't attach listeners on mobile/touch devices
+
         const handleMouseMove = (e: MouseEvent) => {
             if (!isVisible) setIsVisible(true);
             mouseX.set(e.clientX);
@@ -48,9 +57,9 @@ export default function CustomCursor() {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseover", handleMouseOver);
         };
-    }, [mouseX, mouseY, isVisible]);
+    }, [mouseX, mouseY, isVisible, isTouchDevice]);
 
-    if (!isVisible) return null;
+    if (isTouchDevice || !isVisible) return null;
 
     return (
         <div className="fixed inset-0 pointer-events-none z-[9999]">

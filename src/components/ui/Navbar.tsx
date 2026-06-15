@@ -144,7 +144,7 @@ export default function Navbar() {
                 className="flex md:hidden fixed top-4 left-4 right-4 z-[50] flex-col pointer-events-auto"
             >
                 {/* Header Pill */}
-                <div className="relative w-full px-5 py-3 rounded-full bg-[#0a192f]/60 border border-[#00e5ff]/20 backdrop-blur-xl shadow-[0_0_30px_rgba(0,229,255,0.15)] flex items-center justify-between">
+                <div className="relative w-full px-5 py-3 rounded-full bg-[#0a192f]/95 border border-[#00e5ff]/30 shadow-[0_0_30px_rgba(0,229,255,0.15)] flex items-center justify-between">
                     {/* Brand / Logo */}
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-[#00e5ff] rounded-full animate-pulse shadow-[0_0_5px_#00e5ff]" />
@@ -186,7 +186,7 @@ export default function Navbar() {
                             animate={{ opacity: 1, height: "auto", y: 0 }}
                             exit={{ opacity: 0, height: 0, y: -10 }}
                             transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="overflow-hidden mt-2 w-full rounded-2xl bg-[#0a192f]/70 border border-[#00e5ff]/15 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,229,255,0.1)]"
+                            className="overflow-hidden mt-2 w-full rounded-2xl bg-[#0a192f]/95 border border-[#00e5ff]/30 shadow-[0_10px_30px_rgba(0,229,255,0.1)]"
                         >
                             <div className="p-5 flex flex-col gap-4">
                                 {NAV_LINKS.map((link, idx) => (

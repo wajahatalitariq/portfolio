@@ -82,7 +82,7 @@ export default function ScrollToTop() {
                         onClick={scrollToTop}
                         whileHover={{ scale: 1.1, boxShadow: "0 0 25px rgba(0,229,255,0.6)" }}
                         whileTap={{ scale: 0.9 }}
-                        className="relative w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-[#00e5ff]/40 flex items-center justify-center cursor-pointer transition-colors duration-300 hover:border-[#00e5ff] group shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                        className="relative w-12 h-12 rounded-full bg-black/90 md:bg-black/40 md:backdrop-blur-md border border-[#00e5ff]/40 flex items-center justify-center cursor-pointer transition-colors duration-300 hover:border-[#00e5ff] group shadow-[0_0_15px_rgba(0,229,255,0.2)]"
                         title="Scroll to Top"
                     >
                         {/* Glow Effect */}

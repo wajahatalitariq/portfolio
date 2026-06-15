@@ -1,4 +1,5 @@
 import ClientScene from '@/components/canvas/ClientScene';
+import StaticHero from '@/components/ui/StaticHero';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -21,7 +22,8 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="w-screen h-screen">
+    <main className="w-screen h-screen relative">
+      <StaticHero hero={hero} />
       <ClientScene
         skills={skills}
         projects={projects}
