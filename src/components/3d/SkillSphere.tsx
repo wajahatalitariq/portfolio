@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import { Text, Sparkles } from "@react-three/drei";
+import { Sparkles } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
+import * as THREE from "three";
 
 let sharedAudioCtx: AudioContext | null = null;
 
@@ -21,13 +22,75 @@ function getSharedAudioContext() {
 /**
  * SkillSphere Component
  * 
- * An interactive 3D orb that represents a technical skill.
- * Uses 'react-three-rapier' for physics (collisions and impulses)
- * and generates dynamic procedural audio on click.
- * 
- * NOTE: Uses <Text> (WebGL canvas text) instead of <Html> to avoid
- * portal issues when the component is dynamically imported.
+ * NOTE: Uses an offscreen Canvas-generated Sprite texture for text labels.
+ * This completely avoids using Drei's <Text> (which loads troika-three-text and
+ * creates a Web Worker that crashes on minified Next.js bundles) and Drei's <Html>
+ * (which causes portal rendering issues in dynamically imported canvas scenes).
  */
+function CanvasText({ text, hovered }: { text: string; hovered: boolean }) {
+    const texture = useMemo(() => {
+        if (typeof window === "undefined") return null;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+            // Draw background
+            ctx.fillStyle = hovered ? "rgba(0, 229, 255, 0.25)" : "rgba(0, 0, 0, 0.75)";
+            ctx.strokeStyle = hovered ? "#00e5ff" : "rgba(0, 229, 255, 0.3)";
+            ctx.lineWidth = 6;
+            
+            ctx.beginPath();
+            const x = 8, y = 8, w = canvas.width - 16, h = canvas.height - 16, r = 16;
+            if (typeof ctx.roundRect === "function") {
+                ctx.roundRect(x, y, w, h, r);
+            } else {
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Text configuration
+            ctx.font = "bold 38px monospace";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Draw outline
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 8;
+            ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
+
+            // Draw fill
+            ctx.fillStyle = hovered ? "#ffffff" : "#00e5ff";
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        }
+        
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.minFilter = THREE.LinearFilter;
+        return tex;
+    }, [text, hovered]);
+
+    useEffect(() => {
+        return () => {
+            texture?.dispose();
+        };
+    }, [texture]);
+
+    if (!texture) return null;
+
+    return (
+        <sprite position={[0, 1.2, 0]} scale={[1.8, 0.45, 1]}>
+            <spriteMaterial map={texture} depthTest={true} />
+        </sprite>
+    );
+}
+
 export default function SkillSphere({ position, name }: { position: [number, number, number], name: string }) {
     const bodyRef = useRef<RapierRigidBody>(null);
     const [hovered, setHovered] = useState(false);
@@ -123,19 +186,8 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 />
             </mesh>
 
-            {/* Name label rendered directly in WebGL — works with dynamic imports */}
-            <Text
-                position={[0, 1.1, 0]}
-                fontSize={0.28}
-                color={hovered ? "#ffffff" : "#00e5ff"}
-                anchorX="center"
-                anchorY="middle"
-                outlineWidth={0.04}
-                outlineColor="#000000"
-                renderOrder={1}
-            >
-                {name}
-            </Text>
+            {/* Name label rendered via custom canvas sprite to bypass Web Worker crashes */}
+            <CanvasText text={name} hovered={hovered} />
 
             {/* Sparkle burst on click — stays centered on the sphere */}
             {sparkling && (
