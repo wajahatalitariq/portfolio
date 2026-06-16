@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ScrollControls, Scroll, Sparkles, Float, Environment } from "@react-three/drei";
 import HolographicCard from "@/components/3d/HolographicCard";
@@ -10,9 +10,11 @@ import HobbiesSection from "@/components/sections/HobbiesSection";
 import CVDownloadSection from "@/components/sections/CVDownloadSection";
 import CertificationsSection from "@/components/sections/CertificationsSection";
 import ContactSection from "@/components/sections/ContactSection";
-import dynamic from "next/dynamic";
+// React.lazy (not next/dynamic) is required for code-splitting inside R3F Canvas.
+// next/dynamic breaks the Three.js rendering context because it creates a React
+// boundary that doesn't propagate the WebGL renderer/scene/camera contexts.
+const PhysicsPlayground = lazy(() => import("./PhysicsPlayground"));
 
-const PhysicsPlayground = dynamic(() => import("./PhysicsPlayground"), { ssr: false });
 
 import { OFFSETS } from "@/lib/constants";
 import type { SceneProps } from "@/lib/types";
@@ -117,7 +119,9 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
 
                     {/* Skills Physics Playground Section */}
                     <group position={[0, -12 - (offsets.tech - 120) / 20, 0]}>
-                        <PhysicsPlayground skills={skills} skillPositions={skillPositions} />
+                        <Suspense fallback={null}>
+                            <PhysicsPlayground skills={skills} skillPositions={skillPositions} />
+                        </Suspense>
                     </group>
 
                 </Scroll>
