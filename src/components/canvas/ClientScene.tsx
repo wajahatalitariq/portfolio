@@ -41,7 +41,6 @@ function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
             const timer = setTimeout(dismiss, 1200);
             return () => clearTimeout(timer);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [progress]);
 
     // Dismiss when active becomes false (normal completion path)
@@ -50,14 +49,12 @@ function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
             const timer = setTimeout(dismiss, 800);
             return () => clearTimeout(timer);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [active]);
 
     // Hard fallback: if 6 seconds pass and loader is still visible, force dismiss
     useEffect(() => {
         const timer = setTimeout(dismiss, 6000);
         return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
