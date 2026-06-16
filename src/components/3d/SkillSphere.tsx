@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import { Html, Sparkles } from "@react-three/drei";
+import { Text, Sparkles } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 
 let sharedAudioCtx: AudioContext | null = null;
@@ -24,6 +24,9 @@ function getSharedAudioContext() {
  * An interactive 3D orb that represents a technical skill.
  * Uses 'react-three-rapier' for physics (collisions and impulses)
  * and generates dynamic procedural audio on click.
+ * 
+ * NOTE: Uses <Text> (WebGL canvas text) instead of <Html> to avoid
+ * portal issues when the component is dynamically imported.
  */
 export default function SkillSphere({ position, name }: { position: [number, number, number], name: string }) {
     const bodyRef = useRef<RapierRigidBody>(null);
@@ -120,24 +123,19 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 />
             </mesh>
 
-            {/* Name label — always visible, lightweight DOM overlay */}
-            <Html
-                center
-                distanceFactor={6}
-                zIndexRange={[100, 0]}
-                style={{ pointerEvents: "none" }}
+            {/* Name label rendered directly in WebGL — works with dynamic imports */}
+            <Text
+                position={[0, 1.1, 0]}
+                fontSize={0.28}
+                color={hovered ? "#ffffff" : "#00e5ff"}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.04}
+                outlineColor="#000000"
+                renderOrder={1}
             >
-                <div className={`
-                    text-[11px] font-bold font-mono px-2 py-0.5 rounded whitespace-nowrap select-none
-                    transition-all duration-200
-                    ${hovered
-                        ? "bg-[#00e5ff]/30 text-white border border-[#00e5ff] shadow-[0_0_12px_rgba(0,229,255,0.9)]"
-                        : "bg-black/70 text-[#00e5ff] border border-[#00e5ff]/30"
-                    }
-                `}>
-                    {name}
-                </div>
-            </Html>
+                {name}
+            </Text>
 
             {/* Sparkle burst on click — stays centered on the sphere */}
             {sparkling && (
