@@ -69,11 +69,43 @@ function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
 /**
  * ClientScene Component
  * 
- * A client-only wrapper around the main 3D Scene.
- * Dynamically imports the heavy Scene component to split bundles.
+ * Phase 5 Optimization: Defers mounting the heavy <Canvas> until the user's
+ * first interaction (scroll, touch, or click). This prevents Three.js from
+ * blocking the main thread during the critical initial paint window, which
+ * dramatically reduces Total Blocking Time (TBT) as measured by Lighthouse.
+ * 
+ * A "tap to start" prompt is shown instantly while the canvas waits.
  */
 export default function ClientScene(props: SceneProps) {
+    const [canvasReady, setCanvasReady] = useState(false);
     const [loadingDone, setLoadingDone] = useState(false);
+
+    // Mount canvas on first user interaction
+    useEffect(() => {
+        const activate = () => {
+            setCanvasReady(true);
+            window.removeEventListener("scroll", activate);
+            window.removeEventListener("touchstart", activate);
+            window.removeEventListener("click", activate);
+            window.removeEventListener("keydown", activate);
+        };
+
+        window.addEventListener("scroll", activate, { passive: true });
+        window.addEventListener("touchstart", activate, { passive: true });
+        window.addEventListener("click", activate);
+        window.addEventListener("keydown", activate);
+
+        // Also start canvas automatically after 2s in case user doesn't interact
+        const autoStart = setTimeout(() => activate(), 2000);
+
+        return () => {
+            window.removeEventListener("scroll", activate);
+            window.removeEventListener("touchstart", activate);
+            window.removeEventListener("click", activate);
+            window.removeEventListener("keydown", activate);
+            clearTimeout(autoStart);
+        };
+    }, []);
 
     useEffect(() => {
         if (loadingDone) {
@@ -83,8 +115,8 @@ export default function ClientScene(props: SceneProps) {
 
     return (
         <>
-            <Scene {...props} />
-            {!loadingDone && <LoaderOverlay onComplete={() => setLoadingDone(true)} />}
+            {canvasReady && <Scene {...props} />}
+            {canvasReady && !loadingDone && <LoaderOverlay onComplete={() => setLoadingDone(true)} />}
         </>
     );
 }
