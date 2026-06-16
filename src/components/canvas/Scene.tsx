@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { ScrollControls, Scroll, Sparkles, Float, Environment, Grid } from "@react-three/drei";
-import { Physics, RigidBody } from "@react-three/rapier";
+import { ScrollControls, Scroll, Sparkles, Float, Environment } from "@react-three/drei";
 import HolographicCard from "@/components/3d/HolographicCard";
-import SkillSphere from "@/components/3d/SkillSphere";
 import ExperienceSection from "@/components/sections/ExperienceSection";
 import SkillNetworkSection from "@/components/sections/SkillNetworkSection";
 import HobbiesSection from "@/components/sections/HobbiesSection";
 import CVDownloadSection from "@/components/sections/CVDownloadSection";
 import CertificationsSection from "@/components/sections/CertificationsSection";
 import ContactSection from "@/components/sections/ContactSection";
+import dynamic from "next/dynamic";
+
+const PhysicsPlayground = dynamic(() => import("./PhysicsPlayground"), { ssr: false });
 
 import { OFFSETS } from "@/lib/constants";
 import type { SceneProps } from "@/lib/types";
@@ -116,37 +117,7 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
 
                     {/* Skills Physics Playground Section */}
                     <group position={[0, -12 - (offsets.tech - 120) / 20, 0]}>
-                        <Physics gravity={[0, -5, 0]}>
-                            <RigidBody type="fixed" position={[0, -4, 0]}>
-                                <mesh>
-                                    <boxGeometry args={[60, 1, 60]} />
-                                    <meshBasicMaterial visible={false} />
-                                </mesh>
-                            </RigidBody>
-                            <Grid position={[0, -3.5, 0]} args={[50, 50]} cellColor="#00e5ff" sectionColor="#b300ff" fadeDistance={30} cellThickness={1} sectionThickness={1.5} infiniteGrid={true} />
-
-                            {/* Containment Walls (Invisible) */}
-                            <RigidBody type="fixed" position={[-20, 15, 0]}>
-                                <mesh><boxGeometry args={[1, 40, 60]} /><meshStandardMaterial visible={false} /></mesh>
-                            </RigidBody>
-                            <RigidBody type="fixed" position={[20, 15, 0]}>
-                                <mesh><boxGeometry args={[1, 40, 60]} /><meshStandardMaterial visible={false} /></mesh>
-                            </RigidBody>
-                            <RigidBody type="fixed" position={[0, 15, -20]}>
-                                <mesh><boxGeometry args={[60, 40, 1]} /><meshStandardMaterial visible={false} /></mesh>
-                            </RigidBody>
-                            <RigidBody type="fixed" position={[0, 15, 20]}>
-                                <mesh><boxGeometry args={[60, 40, 1]} /><meshStandardMaterial visible={false} /></mesh>
-                            </RigidBody>
-
-                            {skillPositions.length === skills.length && skills.map((skill, index) => (
-                                <SkillSphere
-                                    key={index}
-                                    position={skillPositions[index]}
-                                    name={skill.name}
-                                />
-                            ))}
-                        </Physics>
+                        <PhysicsPlayground skills={skills} skillPositions={skillPositions} />
                     </group>
 
                 </Scroll>
