@@ -15,47 +15,58 @@ const Scene = dynamic(() => import("./Scene"), {
 
 /**
  * Three.js Asset Loader Overlay
- * 
- * Uses Drei's useProgress to track the loading state of textures, fonts, 
- * models, and the environment map. Keeps the CyberLoader visible until 
- * everything is fully ready, then fades it out smoothly.
- * 
- * Once loading completes and the exit animation finishes, the entire 
- * overlay unmounts to free up the useProgress subscription.
+ *
+ * IMPORTANT: useProgress from Drei can stay `active: true` even when progress
+ * reaches 100% (e.g. while the Environment HDRI map is still being processed).
+ * Relying solely on `active` causes the loader to get permanently stuck at 100%.
+ *
+ * Fix: We track progress directly. When progress >= 100 OR active becomes false,
+ * we start a short dismiss timer to allow the CyberLoader "COMPLETE" animation
+ * to finish, then fade out the overlay.
  */
 function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
     const { active, progress } = useProgress();
-    const hasBeenActiveRef = useRef(false);
+    const [shouldShow, setShouldShow] = useState(true);
+    const dismissedRef = useRef(false);
 
+    const dismiss = () => {
+        if (dismissedRef.current) return;
+        dismissedRef.current = true;
+        setShouldShow(false);
+    };
+
+    // Dismiss when progress reaches 100% — give the "COMPLETE" animation 1.2s
     useEffect(() => {
-        if (active) {
-            hasBeenActiveRef.current = true;
+        if (progress >= 100) {
+            const timer = setTimeout(dismiss, 1200);
+            return () => clearTimeout(timer);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [progress]);
+
+    // Dismiss when active becomes false (normal completion path)
+    useEffect(() => {
+        if (!active) {
+            const timer = setTimeout(dismiss, 800);
+            return () => clearTimeout(timer);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [active]);
 
+    // Hard fallback: if 6 seconds pass and loader is still visible, force dismiss
     useEffect(() => {
-        if (!active && hasBeenActiveRef.current) {
-            onComplete();
-        }
-    }, [active, onComplete]);
-
-    // Fallback: If 3 seconds pass and active is false, complete the loader
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (!active) {
-                onComplete();
-            }
-        }, 3000);
+        const timer = setTimeout(dismiss, 6000);
         return () => clearTimeout(timer);
-    }, [active, onComplete]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <AnimatePresence onExitComplete={onComplete}>
-            {active && (
-                <motion.div 
+            {shouldShow && (
+                <motion.div
                     key="loader"
                     initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }} 
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     className="fixed inset-0 z-[9999]"
                 >
@@ -68,13 +79,11 @@ function LoaderOverlay({ onComplete }: { onComplete: () => void }) {
 
 /**
  * ClientScene Component
- * 
+ *
  * Phase 5 Optimization: Defers mounting the heavy <Canvas> until the user's
  * first interaction (scroll, touch, or click). This prevents Three.js from
  * blocking the main thread during the critical initial paint window, which
  * dramatically reduces Total Blocking Time (TBT) as measured by Lighthouse.
- * 
- * A "tap to start" prompt is shown instantly while the canvas waits.
  */
 export default function ClientScene(props: SceneProps) {
     const [canvasReady, setCanvasReady] = useState(false);
