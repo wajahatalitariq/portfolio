@@ -1,6 +1,18 @@
-import ClientScene from '@/components/canvas/ClientScene';
+import dynamic from 'next/dynamic';
+import CyberLoader from '@/components/ui/CyberLoader';
 import StaticHero from '@/components/ui/StaticHero';
 import { prisma } from '@/lib/prisma';
+
+/**
+ * Dynamic import of ClientScene with ssr: false
+ * This is the ORIGINAL working pattern — dynamic() must live in page.tsx
+ * (the route entry point), not nested inside a client component wrapper.
+ * CyberLoader is the loading fallback while the Three.js chunk downloads.
+ */
+const ClientScene = dynamic(() => import('@/components/canvas/ClientScene'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 z-[9999]"><CyberLoader /></div>
+});
 
 /**
  * Home Page (Main Entry Point)
