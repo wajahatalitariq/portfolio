@@ -1,0 +1,124 @@
+// This is your Prisma schema file.
+// It defines your database structure (tables, columns, and relationships).
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Using PostgreSQL database hosted on Supabase.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for Admin Dashboard authentication.
+model User {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
+
+// Skill model: Represents the technical skills shown in the 'Tech Stack' spheres 
+// and the 'Skill Network' graph.
+model Skill {
+  id          String @id @default(cuid())
+  name        String
+  category    String   // e.g., "Frontend", "Backend", "Tools"
+  level       Int      // Skill proficiency (0-100)
+  description String
+  projects    String   // Stored as comma-separated string for simplicity
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Experience model: Stores your professional work history.
+model Experience {
+  id        String   @id @default(cuid())
+  role      String   // Job title
+  company   String
+  team      String?  // Optional department or team name
+  duration  String   // e.g., "Jan 2023 - Present"
+  stack     String   // Comma-separated list of tech used
+  points    String   // Bullet points (usually separated by newlines)
+  order     Int      @default(0) // Controls the display order on the page
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Hobby model: Represents the interactive hobby cards with custom icons and colors.
+model Hobby {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  color       String   @default("#00e5ff") // Primary glow color
+  glow        String   @default("rgba(0,229,255,0.3)")
+  iconName    String   // Identifier used to look up the SVG icon in the frontend
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Resume model: Stores links to your downloadable resume files.
+model Resume {
+  id        String   @id @default(cuid())
+  pdfUrl    String?  // Link to PDF version
+  wordUrl   String?  // Link to Word version
+  linkUrl   String?  // Link to external portfolio/drive
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Hero model: Stores the main title and introduction text shown at the top of the page.
+model Hero {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  intro     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Certification model: Represents professional certificates.
+model Certification {
+  id          String   @id @default(cuid())
+  title       String
+  issuer      String
+  issuedAt    DateTime
+  credentialUrl String?
+  color       String   @default("#00e5ff")
+  skills      String   // Comma-separated skill names related to this certificate
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ContactLink model: Stores links for the HUD and Contact section (Email, LinkedIn, etc.).
+model ContactLink {
+  id        String   @id @default(cuid())
+  label     String   // e.g., "Email", "LinkedIn"
+  url       String   // The actual link (mailto: or https://)
+  icon      String   // Name of the icon to display
+  color     String   @default("#00e5ff")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Message model: Stores inquiries sent by visitors via the Contact form.
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  content   String
+  isRead    Boolean  @default(false) // Whether the admin has viewed this message
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
