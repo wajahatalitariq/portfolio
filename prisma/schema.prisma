@@ -6,10 +6,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Using PostgreSQL database hosted on Supabase.
+// We are using SQLite for simplicity. The database is stored in a local file called 'dev.db'.
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // User model for Admin Dashboard authentication.

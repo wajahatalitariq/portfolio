@@ -135,7 +135,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
             };
             animFrameRef.current = requestAnimationFrame(animate);
         } else {
-            requestAnimationFrame(() => setDrawProgress(0));
+            setDrawProgress(0);
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         }
         return () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); };
@@ -401,7 +401,7 @@ export default function ContactSection({ links }: { links: ContactLink[] }) {
                                                 </svg>
                                             </div>
                                             <p className="text-[#00ff88] font-mono font-bold tracking-widest uppercase text-sm">Signal Transmitted!</p>
-                                            <p className="text-zinc-500 font-mono text-xs">{"I'll get back to you soon."}</p>
+                                            <p className="text-zinc-500 font-mono text-xs">I'll get back to you soon.</p>
                                         </motion.div>
                                     ) : (
                                         <motion.form

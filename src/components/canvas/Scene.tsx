@@ -28,9 +28,8 @@ function ScrollHandler() {
     const scroll = useR3FScroll();
     
     useEffect(() => {
-        const handleScrollRequest = (e: Event) => {
-            const customEvent = e as CustomEvent<{ offsetKey: string; isMobile: boolean }>;
-            const { offsetKey, isMobile } = customEvent.detail;
+        const handleScrollRequest = (e: any) => {
+            const { offsetKey, isMobile } = e.detail;
             const offsets = isMobile ? OFFSETS.mobile : OFFSETS.desktop;
             const vh = offsets[offsetKey as keyof typeof offsets] as number;
             
@@ -59,19 +58,6 @@ function ScrollHandler() {
  */
 export default function Scene({ skills, projects, experiences, hobbies, resume, hero, certifications, contactLinks }: SceneProps) {
     const [isMobile, setIsMobile] = useState(false);
-    const [skillPositions, setSkillPositions] = useState<[number, number, number][]>([]);
-
-    useEffect(() => {
-        const positions = skills.map(() => [
-            (Math.random() - 0.5) * 10,
-            5 + Math.random() * 8,
-            (Math.random() - 0.5) * 4
-        ] as [number, number, number]);
-        
-        requestAnimationFrame(() => {
-            setSkillPositions(positions);
-        });
-    }, [skills]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -137,10 +123,10 @@ export default function Scene({ skills, projects, experiences, hobbies, resume, 
                                 <mesh><boxGeometry args={[60, 40, 1]} /><meshStandardMaterial visible={false} /></mesh>
                             </RigidBody>
 
-                            {skillPositions.length === skills.length && skills.map((skill, index) => (
+                            {skills.map((skill, index) => (
                                 <SkillSphere
                                     key={index}
-                                    position={skillPositions[index]}
+                                    position={[(Math.random() - 0.5) * 10, 5 + Math.random() * 8, (Math.random() - 0.5) * 4]}
                                     name={skill.name}
                                 />
                             ))}

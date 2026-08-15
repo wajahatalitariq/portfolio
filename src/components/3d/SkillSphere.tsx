@@ -1,83 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import { Sparkles } from "@react-three/drei";
-import * as THREE from "three";
-import { ThreeEvent } from "@react-three/fiber";
+import { Html, Sparkles } from "@react-three/drei";
 
 /**
  * SkillSphere Component
  * 
- * NOTE: Uses an offscreen Canvas-generated Sprite texture for text labels.
- * This completely avoids using Drei's <Text> (which loads troika-three-text and
- * creates a Web Worker that crashes on minified Next.js bundles) and Drei's <Html>
- * (which causes portal rendering issues in dynamically imported canvas scenes).
+ * An interactive 3D orb that represents a technical skill.
+ * Uses 'react-three-rapier' for physics (collisions and impulses)
+ * and generates dynamic procedurale audio on click.
  */
-function CanvasText({ text, hovered }: { text: string; hovered: boolean }) {
-    const texture = useMemo(() => {
-        if (typeof window === "undefined") return null;
-
-        const canvas = document.createElement("canvas");
-        canvas.width = 512;
-        canvas.height = 128;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-            // Draw background
-            ctx.fillStyle = hovered ? "rgba(0, 229, 255, 0.25)" : "rgba(0, 0, 0, 0.75)";
-            ctx.strokeStyle = hovered ? "#00e5ff" : "rgba(0, 229, 255, 0.3)";
-            ctx.lineWidth = 6;
-            
-            ctx.beginPath();
-            const x = 8, y = 8, w = canvas.width - 16, h = canvas.height - 16, r = 16;
-            if (typeof ctx.roundRect === "function") {
-                ctx.roundRect(x, y, w, h, r);
-            } else {
-                ctx.moveTo(x + r, y);
-                ctx.arcTo(x + w, y, x + w, y + h, r);
-                ctx.arcTo(x + w, y + h, x, y + h, r);
-                ctx.arcTo(x, y + h, x, y, r);
-                ctx.arcTo(x, y, x + w, y, r);
-                ctx.closePath();
-            }
-            ctx.fill();
-            ctx.stroke();
-
-            // Text configuration
-            ctx.font = "bold 38px monospace";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            // Draw outline
-            ctx.strokeStyle = "#000000";
-            ctx.lineWidth = 8;
-            ctx.strokeText(text, canvas.width / 2, canvas.height / 2);
-
-            // Draw fill
-            ctx.fillStyle = hovered ? "#ffffff" : "#00e5ff";
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-        }
-        
-        const tex = new THREE.CanvasTexture(canvas);
-        tex.minFilter = THREE.LinearFilter;
-        return tex;
-    }, [text, hovered]);
-
-    useEffect(() => {
-        return () => {
-            texture?.dispose();
-        };
-    }, [texture]);
-
-    if (!texture) return null;
-
-    return (
-        <sprite position={[0, 1.2, 0]} scale={[1.8, 0.45, 1]}>
-            <spriteMaterial map={texture} depthTest={true} />
-        </sprite>
-    );
-}
-
 export default function SkillSphere({ position, name }: { position: [number, number, number], name: string }) {
     const bodyRef = useRef<RapierRigidBody>(null);
     const [hovered, setHovered] = useState(false);
@@ -89,8 +22,7 @@ export default function SkillSphere({ position, name }: { position: [number, num
      * This avoids needing to load external .mp3 files for small UI sounds.
      */
     const playClickSound = () => {
-        const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        const ctx = new AudioContextClass();
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
         // Layer 1: punchy low thud
         const osc1 = ctx.createOscillator();
@@ -118,7 +50,7 @@ export default function SkillSphere({ position, name }: { position: [number, num
         osc2.stop(ctx.currentTime + 0.35);
     };
 
-    const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    const handlePointerDown = (e: any) => {
         e.stopPropagation();
         document.body.style.cursor = "grabbing";
         playClickSound();
@@ -159,8 +91,24 @@ export default function SkillSphere({ position, name }: { position: [number, num
                 />
             </mesh>
 
-            {/* Name label rendered via custom canvas sprite to bypass portal issues */}
-            <CanvasText text={name} hovered={hovered} />
+            {/* Name label — always visible, bigger font */}
+            <Html
+                center
+                distanceFactor={6}
+                zIndexRange={[100, 0]}
+                style={{ pointerEvents: "none" }}
+            >
+                <div className={`
+                    text-[11px] font-bold font-mono px-2 py-0.5 rounded whitespace-nowrap select-none
+                    transition-all duration-200
+                    ${hovered
+                        ? "bg-[#00e5ff]/30 text-white border border-[#00e5ff] shadow-[0_0_12px_rgba(0,229,255,0.9)]"
+                        : "bg-black/70 text-[#00e5ff] border border-[#00e5ff]/30"
+                    }
+                `}>
+                    {name}
+                </div>
+            </Html>
 
             {/* Sparkle burst on click — stays centered on the sphere */}
             {sparkling && (

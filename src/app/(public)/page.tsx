@@ -1,4 +1,4 @@
-import ClientScene from '@/components/canvas/ClientScene';
+import Scene from '@/components/canvas/Scene';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -190,7 +190,7 @@ export default async function Home() {
       </noscript>
 
       {/* 3D Interactive Canvas — requires JavaScript */}
-      <ClientScene
+      <Scene
         skills={skills}
         projects={projects}
         experiences={experiences}
