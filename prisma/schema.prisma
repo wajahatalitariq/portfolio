@@ -8,8 +8,8 @@ generator client {
 
 // We are using SQLite for simplicity. The database is stored in a local file called 'dev.db'.
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User model for Admin Dashboard authentication.
